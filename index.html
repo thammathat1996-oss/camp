@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Bank - Trilingual Camp 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Sarabun:wght@400;600&family=Noto+Sans+SC:wght@500;700&family=Noto+Sans+Myanmar:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f0fdf4; /* เขียวอ่อน */ }
+        .font-read { font-family: 'Sarabun', sans-serif; }
+        .font-cn { font-family: 'Noto Sans SC', sans-serif; }
+        .font-mm { font-family: 'Noto Sans Myanmar', sans-serif; line-height: 1.5; }
+
+        /* --- FLIP CARD 3D --- */
+        .flip-card {
+            background-color: transparent;
+            width: 100%;
+            height: 580px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(22, 163, 74, 0.15), 0 8px 10px -6px rgba(22, 163, 74, 0.1);
+        }
+
+        .flip-card:hover .flip-card-inner {
+            box-shadow: 0 20px 25px -5px rgba(22, 163, 74, 0.25), 0 8px 10px -6px rgba(22, 163, 74, 0.1);
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* FRONT: Green Theme */
+        .flip-card-front {
+            background-color: white;
+            color: #14532d;
+            border: 2px solid #bbf7d0;
+            padding: 1rem;
+            padding-bottom: 0.5rem;
+            justify-content: space-between;
+        }
+
+        /* BACK: Green Gradient */
+        .flip-card-back {
+            background: linear-gradient(145deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            transform: rotateY(180deg);
+            padding: 2rem;
+            justify-content: center;
+        }
+
+        /* --- GAME CARD STYLES --- */
+        .game-card {
+            background-color: transparent;
+            aspect-ratio: 3/4;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .game-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .game-card.flipped .game-card-inner {
+            transform: rotateY(180deg);
+        }
+        .game-card.matched .game-card-inner {
+            transform: rotateY(180deg);
+            box-shadow: 0 0 15px #22c55e;
+        }
+        .game-card-front, .game-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .game-card-front {
+            background-color: #16a34a;
+            background-image: linear-gradient(135deg, #16a34a 25%, #15803d 25%, #15803d 50%, #16a34a 50%, #16a34a 75%, #15803d 75%, #15803d 100%);
+            background-size: 20px 20px;
+            color: white;
+            border: 2px solid #fff;
+        }
+        .game-card-back {
+            background-color: white;
+            color: #1f2937;
+            transform: rotateY(180deg);
+            border: 2px solid #16a34a;
+            padding: 0.5rem;
+        }
+
+        /* --- TEXT HANDLING --- */
+        .scrollable-text {
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 2px;
+            mask-image: linear-gradient(to right, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+        }
+        .scrollable-text::-webkit-scrollbar { display: none; }
+
+        /* Row Layout */
+        .vocab-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background-color: #f0fdf4;
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border: 1px solid #dcfce7;
+            transition: transform 0.2s;
+        }
+        .vocab-row:hover {
+            transform: scale(1.02);
+            background-color: #dcfce7;
+        }
+
+        /* Sound Button */
+        .btn-sound {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background-color: white;
+            color: #16a34a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            transition: all 0.2s;
+            border: 2px solid #bbf7d0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+        .btn-sound:hover { transform: scale(1.1) rotate(10deg); background-color: #16a34a; color: white; border-color: #16a34a; }
+        .btn-sound:active { transform: scale(0.95); }
+
+        /* Thai Sound Button (Small) */
+        .btn-sound-th {
+            width: 28px;
+            height: 28px;
+            background-color: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            margin-left: 8px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-sound-th:hover { transform: scale(1.1); background-color: #dcfce7; }
+
+        /* Animation: Back to Top */
+        #backToTop {
+            transition: opacity 0.4s, transform 0.4s;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+        #backToTop.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* 3D Push Button Styles for Header */
+        .nav-btn-3d {
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0px 0px rgba(0,0,0,0.1);
+            transform: translateY(0);
+        }
+        .nav-btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px 0px rgba(0,0,0,0.1);
+        }
+        
+        .nav-btn-game {
+            background: linear-gradient(to bottom, #fbbf24, #f59e0b);
+            border-color: #d97706;
+            color: #78350f;
+        }
+        .nav-btn-game:hover {
+            background: linear-gradient(to bottom, #fcd34d, #fbbf24);
+        }
+
+        /* Utility to toggle views */
+        .hidden-section {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-green-700 to-emerald-600 shadow-xl text-white rounded-b-[2.5rem]">
+        <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row items-center justify-between gap-6">
+            
+            <!-- Left Side: Logo & School Info -->
+            <div class="flex items-start gap-5 w-full lg:w-auto justify-center lg:justify-start cursor-pointer" onclick="showVocab()">
+                <div class="bg-white p-2 rounded-full shadow-lg shrink-0 border-4 border-green-500/30 mt-1">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Hs_logo_mid.png/500px-Hs_logo_mid.png" alt="School Logo" class="w-20 h-20 object-contain">
+                </div>
+                <div class="text-center lg:text-left flex flex-col">
+                    <!-- Department Name (English) -->
+                    <div class="text-xs font-bold text-green-200 tracking-widest uppercase mb-1">
+                        Foreign Language Departments
+                    </div>
+                    
+                    <!-- Main Title -->
+                    <h1 class="text-3xl font-extrabold tracking-wide drop-shadow-md mb-2">
+                        Trilingual Camp 2026
+                    </h1>
+                    
+                    <!-- School Name (Thai & English) -->
+                    <div class="flex flex-col gap-0.5 border-l-4 border-green-400/50 pl-3 mb-3">
+                        <p class="text-base text-white font-medium leading-tight">
+                            โรงเรียนห้องสอนศึกษา ในพระอุปถัมภ์ฯ
+                        </p>
+                        <p class="text-sm text-green-100 font-light opacity-90 leading-tight">
+                            Hongsonsuksa School
+                        </p>
+                    </div>
+
+                    <!-- Slogan -->
+                    <div>
+                        <div class="inline-block px-3 py-1 bg-black/20 rounded-full text-xs text-yellow-300 font-medium border border-white/20 shadow-inner">
+                            🚀 เปิดโลกกว้างสู่ยุคดิจิทัล เรียนรู้สนุกไร้ขีดจำกัด
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Flags & Navigation -->
+            <div class="flex flex-col items-center lg:items-end gap-3 w-full lg:w-auto">
+                
+                <!-- Flags -->
+                <div class="flex gap-4 text-3xl filter drop-shadow-md animate-pulse mb-2">
+                    <span title="Thai">🇹🇭</span>
+                    <span title="English">🇬🇧</span>
+                    <span title="Chinese">🇨🇳</span>
+                    <span title="Myanmar">🇲🇲</span>
+                </div>
+
+                <!-- Vocabulary List Label -->
+                <div id="vocab-label" class="text-green-100 font-semibold text-sm tracking-wider uppercase mb-1 drop-shadow-sm opacity-80 border-b border-green-400/30 pb-1">
+                    📚 Vocabulary List
+                </div>
+
+                <!-- Nav Buttons -->
+                <div class="flex flex-wrap gap-3 justify-center lg:justify-end">
+                    <button onclick="showVocab(); scrollToSection('household')" class="nav-btn-3d whitespace-nowrap px-6 py-2 bg-white text-green-700 rounded-full font-bold border-2 border-green-200 hover:bg-green-50">
+                        🏠 ของใช้
+                    </button>
+                    <button onclick="showVocab(); scrollToSection('animals')" class="nav-btn-3d whitespace-nowrap px-6 py-2 bg-white text-pink-600 rounded-full font-bold border-2 border-pink-200 hover:bg-pink-50">
+                        🐷 สัตว์
+                    </button>
+                    <button onclick="showVocab(); scrollToSection('fruits')" class="nav-btn-3d whitespace-nowrap px-6 py-2 bg-white text-orange-600 rounded-full font-bold border-2 border-orange-200 hover:bg-orange-50">
+                        🥬 ผักผลไม้
+                    </button>
+                    <div class="w-px h-8 bg-green-400/50 mx-1 hidden lg:block"></div>
+                    <button onclick="showGame()" class="nav-btn-3d nav-btn-game whitespace-nowrap px-6 py-2 rounded-full font-bold border-2 shadow-lg animate-pulse">
+                        🎮 เกมจับคู่
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 mt-10 pb-20">
+        
+        <!-- VOCABULARY VIEW -->
+        <div id="vocab-view">
+            <section id="household" class="mb-20 scroll-mt-32">
+                <div class="flex items-center gap-3 mb-8 pl-2">
+                    <div class="bg-green-100 p-3 rounded-2xl">
+                        <span class="text-3xl">🏠</span>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-green-800">หมวดของใช้</h3>
+                        <p class="text-gray-500 text-sm">Household Items</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="grid-household"></div>
+            </section>
+
+            <section id="animals" class="mb-20 scroll-mt-32">
+                <div class="flex items-center gap-3 mb-8 pl-2">
+                    <div class="bg-pink-100 p-3 rounded-2xl">
+                        <span class="text-3xl">🐷</span>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-pink-700">หมวดสัตว์</h3>
+                        <p class="text-gray-500 text-sm">Animals</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="grid-animals"></div>
+            </section>
+
+            <section id="fruits" class="mb-20 scroll-mt-32">
+                <div class="flex items-center gap-3 mb-8 pl-2">
+                    <div class="bg-orange-100 p-3 rounded-2xl">
+                        <span class="text-3xl">🥬</span>
+                    </div>
+                    <div>
+                        <h3 class="text-3xl font-bold text-orange-700">หมวดผักผลไม้</h3>
+                        <p class="text-gray-500 text-sm">Fruits & Vegetables</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="grid-fruits"></div>
+            </section>
+        </div>
+
+        <!-- GAME VIEW -->
+        <div id="game-view" class="hidden-section w-full">
+            <div class="bg-white rounded-3xl shadow-xl p-6 md:p-10 border-4 border-yellow-200">
+                <div class="text-center mb-8">
+                    <h2 class="text-4xl font-extrabold text-yellow-600 mb-2">🎮 Matching Game</h2>
+                    <p class="text-gray-500">จับคู่รูปภาพกับคำศัพท์ (สุ่มภาษา ไทย/อังกฤษ/จีน/พม่า)</p>
+                    <div class="mt-4 flex justify-center gap-4">
+                        <div class="bg-yellow-100 px-4 py-2 rounded-xl text-yellow-800 font-bold">
+                            คู่ที่เหลือ: <span id="pairs-left">6</span>
+                        </div>
+                        <button onclick="initGame()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl font-bold shadow-md transition transform hover:scale-105">
+                            🔄 เริ่มใหม่
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Grid -->
+                <div id="game-grid" class="grid grid-cols-3 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                    <!-- Cards will be injected here -->
+                </div>
+
+                <!-- Win Message -->
+                <div id="win-message" class="hidden text-center mt-8 p-6 bg-green-100 rounded-2xl border-2 border-green-400 animate-bounce">
+                    <h3 class="text-3xl font-bold text-green-700">🎉 เก่งมาก! You Win! 🎉</h3>
+                    <p class="text-green-600">คุณจับคู่ได้ครบทุกคำแล้ว</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-green-800 text-white text-center py-10 rounded-t-[3rem] mt-10">
+        <div class="opacity-80 font-light mb-4">Foreign Language Departments</div>
+        <div class="flex justify-center gap-4 text-3xl opacity-50 grayscale hover:grayscale-0 transition-all">
+            🇹🇭 🇬🇧 🇨🇳 🇲🇲
+        </div>
+        <p class="mt-4 text-sm text-green-300">© 2026 Hongsonsuksa School</p>
+    </footer>
+
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 right-6 z-50 bg-green-600 text-white p-4 rounded-full shadow-2xl hover:bg-green-700 border-4 border-white transition-all hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+    </button>
+
+    <script>
+        // Data with Updated Image URLs
+        const data = {
+            household: [
+                { img: "https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?auto=format&fit=crop&w=500&q=60", th: "เครื่องซักผ้า", en: "Washing machine", en_read: "วอช-ชิง-มะ-ชีน", cn: "洗衣机", py: "xǐ yī jī", cn_read: "สี่-อี-จี", mm: "အဝတ်လျှော်စက်", mm_read: "อะ-วุ-ลอ-แซะ" },
+                { img: "https://www.brandbuffet.in.th/wp-content/uploads/2016/08/LG1.jpg", th: "ตู้เย็น", en: "Refrigerator", en_read: "รี-ฟริจ-เจอะ-เร-เตอร์", cn: "冰箱", py: "bīng xiāng", cn_read: "ปิง-เซียง", mm: "ရေခဲသေတ္တာ", mm_read: "เย-แค-ติต-ตา" },
+                { img: "https://www.ofm.co.th/blog/wp-content/uploads/2022/03/air-conditioner-1.jpg", th: "แอร์", en: "Air conditioner", en_read: "แอร์-คอน-ดิ-ชัน-เนอร์", cn: "空调", py: "kōng tiáo", cn_read: "คง-เถียว", mm: "အဲယားကွန်း", mm_read: "แอ-ยา-กูน" },
+                { img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=500&q=60", th: "คอมพิวเตอร์", en: "Computer", en_read: "คอม-พิว-เตอร์", cn: "电脑", py: "diàn nǎo", cn_read: "เตี้ยน-เหน่า", mm: "ကွန်ပျူတာ", mm_read: "กอม-พยู-ตา" },
+                { img: "https://inwfile.com/s-cs/gty1zp.jpg", th: "เครื่องคิดเลข", en: "Calculator", en_read: "แคล-คู-เล-เตอร์", cn: "计算器", py: "jì suàn qì", cn_read: "จี้-ซ่วน-ชี่", mm: "ဂဏန်းပေါင်းစက်", mm_read: "กะ-นัน-ปาว-แซะ" },
+                { img: "https://www.sereechaibeauty.com/backend/media/products/3011_1570002333781308.png", th: "กรรไกร", en: "Scissors", en_read: "ซิส-เซอร์ส", cn: "剪刀", py: "jiǎn dāo", cn_read: "เจี่ยน-ตาว", mm: "ကတ်ကြေး", mm_read: "กัต-จี" },
+                { img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=500&q=60", th: "โทรศัพท์มือถือ", en: "Mobile phone", en_read: "โม-ไบล์-โฟน", cn: "手机", py: "shǒu jī", cn_read: "โส่ว-จี", mm: "လက်ကိုင်ဖုန်း", mm_read: "เล้ก-ก่าย-โฟน" },
+                { img: "https://mundeepremiums.com/wp-content/uploads/2020/12/black-pencil-2.png", th: "ดินสอ", en: "Pencil", en_read: "เพน-ซิล", cn: "铅笔", py: "qiān bǐ", cn_read: "เชียน-ปี่", mm: "ခဲတံ", mm_read: "แค-ดัน" },
+                { img: "https://www.zujipuli.com/img/upload/blog/20200131192645_525183049.jpg", th: "กระดาษ", en: "Paper", en_read: "เพ-เพอร์", cn: "纸", py: "zhǐ", cn_read: "จื่อ", mm: "စက္ကူ", mm_read: "แซะ-กู" },
+                { img: "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=500&q=60", th: "ปากกา", en: "Pen", en_read: "เพ็น", cn: "笔", py: "bǐ", cn_read: "ปี่", mm: "ဘောပင်", mm_read: "บอ-เป็น" }
+            ],
+            animals: [
+                { img: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=500&q=60", th: "หมู", en: "Pig", en_read: "พิก", cn: "猪", py: "zhū", cn_read: "จู", mm: "ဝက်", mm_read: "เวะ" },
+                { img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=500&q=60", th: "สุนัข", en: "Dog", en_read: "ด็อก", cn: "狗", py: "gǒu", cn_read: "โก่ว", mm: "ခွေး", mm_read: "เคว" },
+                { img: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&w=500&q=60", th: "ไก่", en: "Chicken", en_read: "ชิก-เกน", cn: "鸡", py: "jī", cn_read: "จี", mm: "ကြက်", mm_read: "เจ๊ะ" },
+                { img: "https://inwfile.com/s-fp/6dzmij.jpg", th: "เป็ด", en: "Duck", en_read: "ดั๊ก", cn: "鸭", py: "yā", cn_read: "ยา", mm: "ဘဲ", mm_read: "แบ" },
+                { img: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&w=500&q=60", th: "ช้าง", en: "Elephant", en_read: "เอล-เล-เฟนต์", cn: "大象", py: "dà xiàng", cn_read: "ต้า-เซี่ยง", mm: "ဆင်", mm_read: "ซิน" },
+                { img: "https://static.thairath.co.th/media/HCtHFA7ele6Q2dUK4FzQKm8eCaqKXzHMFsIEElwzwyXw083SXlvZVVIRRXuRPRw3Hd.webp", th: "นกยูง", en: "Peacock", en_read: "พี-ค็อก", cn: "孔雀", py: "kǒng què", cn_read: "ขง-เชวี่ย", mm: "ဒေါင်း", mm_read: "ดาวน์" },
+                { img: "https://bugedu.wordpress.com/wp-content/uploads/2018/07/3.jpg?w=640", th: "ผีเสื้อ", en: "Butterfly", en_read: "บัต-เตอร์-ฟลาย", cn: "蝴蝶", py: "hú dié", cn_read: "หู-เตี๋ย", mm: "လိပ်ပြာ", mm_read: "เลก-ปยา" },
+                { img: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?auto=format&fit=crop&w=500&q=60", th: "ม้าลาย", en: "Zebra", en_read: "ซี-บรา", cn: "斑马", py: "bān mǎ", cn_read: "ปาน-หม่า", mm: "မြင်းကျား", mm_read: "มยิง-จา" },
+                { img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRm6QIsWn8P4LnYOuN1seBL1hqL7dDtl3XodQ&s", th: "หงส์", en: "Swan", en_read: "สวอน", cn: "天鹅", py: "tiān é", cn_read: "เทียน-เอ๋อ", mm: "ငန်း", mm_read: "ง้าน" },
+                { img: "https://researchcafe.tsri.or.th/wp-content/uploads/2019/10/SIAMESE-CROCODILES-01-1.jpg", th: "จระเข้", en: "Crocodile", en_read: "คร็อก-โค-ไดล์", cn: "鳄鱼", py: "è yú", cn_read: "เอ้อ-อวี๋", mm: "မိကျောင်း", mm_read: "มิ-จาว" }
+            ],
+            fruits: [
+                { img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYZgLxf29mhdYNw_eys4vMVGh-Z9gZX0eibA&s", th: "ผักกาดขาว", en: "Chinese cabbage", en_read: "ไช-นีส-แคบ-เบจ", cn: "白菜", py: "bái cài", cn_read: "ป๋าย-ไช่", mm: "မုန်ညင်းဖြူ", mm_read: "มุน-ญิน-พยู" },
+                { img: "https://img.pptvhd36.com/health/thumbor/2024/07/14/cusArticle-5dee0f8.jpg", th: "ผักบุ้ง", en: "Morning glory", en_read: "มอร์-นิง-กลอ-รี", cn: "空心菜", py: "kōng xīn cài", cn_read: "คง-ซิน-ไช่", mm: "ကန်စွန်းရွက်", mm_read: "กาน-ซุน-ยเวะ" },
+                { img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNGVWat96xpaRqiM9Kgvy7_s7CA9XiCJ3uwQ&s", th: "มะระ", en: "Bitter gourd", en_read: "บิต-เตอร์-กอร์ด", cn: "苦瓜", py: "kǔ guā", cn_read: "ขู่-กวา", mm: "ကြက်ဟင်းခါးသီး", mm_read: "เจ๊ะ-ฮิน-คา-ตี" },
+                { img: "https://morkeaw.net/wp-content/uploads/2021/08/%E0%B8%A1%E0%B8%B0%E0%B9%80%E0%B8%82%E0%B8%B7%E0%B8%AD%E0%B9%80%E0%B8%97%E0%B8%A8-1.jpg", th: "มะเขือเทศ", en: "Tomato", en_read: "โท-เม-โท", cn: "西红柿", py: "xī hóng shì", cn_read: "ซี-หง-ซื่อ", mm: "ခရမ်းချဉ်သီး", mm_read: "ขะ-ยาน-ชิน-ตี" },
+                { img: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&w=500&q=60", th: "แตงกวา", en: "Cucumber", en_read: "คิว-คัม-เบอร์", cn: "黄瓜", py: "huáng guā", cn_read: "หวาง-กวา", mm: "သခွားသီး", mm_read: "ตะ-กวา-ตี" },
+                { img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=500&q=60", th: "ข้าวโพด", en: "Corn", en_read: "คอร์น", cn: "玉米", py: "yù mǐ", cn_read: "ยวี่-หมี่", mm: "ပြောင်းဖူး", mm_read: "เปย้า-พู" },
+                { img: "https://boonpuerch.com/wp-content/uploads/2018/11/guava-scaled.jpg", th: "ฝรั่ง", en: "Guava", en_read: "กวา-วา", cn: "番石榴", py: "fān shí liú", cn_read: "ฟาน-สือ-หลิว", mm: "မာလကာသီး", mm_read: "มา-ละ-กา-ตี" },
+                { img: "https://static.thairath.co.th/media/dFQROr7oWzulq5Fa5nTvT7PPKK08ajwiqR2B0QMLEX5bYPDLacK0ezpZv09NmtAutDe.webp", th: "องุ่น", en: "Grape", en_read: "เกรป", cn: "葡萄", py: "pú táo", cn_read: "ผู-เถา", mm: "စပျစ်သီး", mm_read: "สะ-ปยิ-ตี" },
+                { img: "https://images.unsplash.com/photo-1527325678964-54921661f888?auto=format&fit=crop&w=500&q=60", th: "แก้วมังกร", en: "Dragon fruit", en_read: "ดรา-กอน-ฟรุต", cn: "火龙果", py: "huǒ lóng guǒ", cn_read: "หั่ว-หลง-กั่ว", mm: "နဂါးမောက်သီး", mm_read: "นะ-กา-เมาก์-ตี" },
+                { img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTPH3h7ETd1YpWPERm4Zs6edTtrZ08Op3pzwg&s", th: "เงาะ", en: "Rambutan", en_read: "แรม-บู-แทน", cn: "红毛丹", py: "hóng máo dān", cn_read: "หง-เหมา-ตัน", mm: "ကြက်မောက်သီး", mm_read: "เจ๊ะ-เมาก์-ตี" }
+            ]
+        };
+
+        // TTS
+        function playSound(text, lang, event) {
+            event.stopPropagation();
+
+            if (!('speechSynthesis' in window)) {
+                alert("อุปกรณ์ไม่รองรับเสียง");
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.1;
+
+            const voices = window.speechSynthesis.getVoices();
+            let selectedVoice = null;
+
+            if (lang === 'zh-CN') {
+                selectedVoice = voices.find(v => v.lang.includes('zh-CN'));
+            } else if (lang === 'en-US') {
+                selectedVoice = voices.find(v => v.lang.includes('en-US') || v.lang.includes('en-GB'));
+            } else if (lang === 'th-TH') {
+                selectedVoice = voices.find(v => v.lang.includes('th-TH') || v.lang.includes('th'));
+            }
+
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.lang = lang;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+
+        // Create Card HTML
+        function createCardHTML(item) {
+            const volIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" /></svg>`;
+            const flipIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-300 hover:text-green-500 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>`;
+
+            return `
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <!-- Header with Image -->
+                        <div class="w-full relative h-44 mb-2">
+                            <img src="${item.img}" alt="${item.en}" class="w-full h-full object-cover rounded-2xl shadow-sm border border-gray-100">
+                            <div class="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full shadow-md backdrop-blur-sm cursor-pointer hover:scale-110 transition">${flipIcon}</div>
+                        </div>
+
+                        <div class="flex flex-col w-full mt-1">
+                            <!-- THAI WORD (No Audio Button) -->
+                            <div class="text-3xl font-bold text-green-900 scrollable-text text-center w-full leading-relaxed py-1 mb-2">${item.th}</div>
+
+                            <div class="vocab-row group">
+                                <div class="flex flex-col text-left overflow-hidden mr-1 w-full">
+                                    <span class="text-[10px] text-green-600 font-bold uppercase tracking-wider">English</span>
+                                    <span class="text-xl font-bold text-gray-700 scrollable-text leading-relaxed py-1">${item.en}</span>
+                                </div>
+                                <button onclick="playSound('${item.en}', 'en-US', event)" class="btn-sound group-hover:bg-green-600 group-hover:text-white" title="ฟังเสียงอังกฤษ">${volIcon}</button>
+                            </div>
+
+                            <div class="vocab-row group">
+                                <div class="flex flex-col text-left overflow-hidden mr-1 w-full">
+                                    <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider">Chinese</span>
+                                    <div class="flex items-baseline gap-2 scrollable-text">
+                                        <span class="text-xl font-cn font-bold text-gray-700 leading-relaxed py-1">${item.cn}</span>
+                                        <span class="text-sm text-gray-400 font-normal">(${item.py})</span>
+                                    </div>
+                                </div>
+                                <button onclick="playSound('${item.cn}', 'zh-CN', event)" class="btn-sound group-hover:bg-green-600 group-hover:text-white" title="ฟังเสียงจีน">${volIcon}</button>
+                            </div>
+
+                            <div class="vocab-row border-purple-100 bg-purple-50/50">
+                                <div class="flex flex-col text-left overflow-hidden w-full">
+                                    <span class="text-[10px] text-purple-500 font-bold uppercase tracking-wider">Myanmar</span>
+                                    <span class="text-xl font-mm font-bold text-gray-700 scrollable-text leading-relaxed py-1">${item.mm}</span>
+                                </div>
+                                </div>
+                        </div>
+
+                        <div class="w-full text-center mt-auto pt-1 pb-1">
+                            <span class="text-xs text-green-500 bg-green-50 px-3 py-1 rounded-full animate-pulse border border-green-100 block">👆 แตะการ์ดเพื่อดูคำอ่าน</span>
+                        </div>
+                    </div>
+
+                    <div class="flip-card-back">
+                        <div class="w-full text-center mb-6">
+                            <div class="inline-block bg-white/20 px-6 py-1.5 rounded-full text-sm font-bold border border-white/30 backdrop-blur-sm shadow-sm">📖 คำอ่านภาษาไทย</div>
+                        </div>
+                        
+                        <div class="space-y-4 text-left w-full">
+                            <div class="bg-white/10 p-3 rounded-xl border border-white/20 hover:bg-white/20 transition">
+                                <div class="text-xs text-yellow-200 mb-0.5 opacity-90 uppercase font-bold">🇬🇧 อังกฤษ</div>
+                                <div class="text-2xl font-read font-bold tracking-wide leading-relaxed py-1">${item.en_read}</div>
+                            </div>
+
+                            <div class="bg-white/10 p-3 rounded-xl border border-white/20 hover:bg-white/20 transition">
+                                <div class="text-xs text-yellow-200 mb-0.5 opacity-90 uppercase font-bold">🇨🇳 จีน</div>
+                                <div class="text-2xl font-read font-bold tracking-wide leading-relaxed py-1">${item.cn_read}</div>
+                            </div>
+
+                            <div class="bg-white/10 p-3 rounded-xl border border-white/20 hover:bg-white/20 transition">
+                                <div class="text-xs text-yellow-200 mb-0.5 opacity-90 uppercase font-bold">🇲🇲 พม่า</div>
+                                <div class="text-2xl font-read font-bold tracking-wide leading-relaxed py-1">${item.mm_read}</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto text-sm opacity-70 flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            แตะอีกครั้งเพื่อกลับด้านหน้า
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // Render Initial Categories
+        function renderCategory(id, items) {
+            document.getElementById(id).innerHTML = items.map(item => createCardHTML(item)).join('');
+        }
+
+        renderCategory('grid-household', data.household);
+        renderCategory('grid-animals', data.animals);
+        renderCategory('grid-fruits', data.fruits);
+
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if(el) {
+                const offset = 140; 
+                const elementPosition = el.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - offset;
+                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+            }
+        }
+
+        // Back To Top Logic
+        const backToTopBtn = document.getElementById("backToTop");
+        window.onscroll = function() {
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                backToTopBtn.classList.add("show");
+            } else {
+                backToTopBtn.classList.remove("show");
+            }
+        };
+
+        // --- GAME LOGIC ---
+        function showVocab() {
+            document.getElementById('vocab-view').classList.remove('hidden-section');
+            document.getElementById('game-view').classList.add('hidden-section');
+            document.getElementById('vocab-label').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showGame() {
+            document.getElementById('vocab-view').classList.add('hidden-section');
+            document.getElementById('game-view').classList.remove('hidden-section');
+            document.getElementById('vocab-label').style.display = 'none';
+            initGame();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        let pairsLeft = 6;
+
+        function initGame() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = '';
+            document.getElementById('win-message').classList.add('hidden');
+            pairsLeft = 6;
+            document.getElementById('pairs-left').innerText = pairsLeft;
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+
+            // Gather all items
+            const allItems = [...data.household, ...data.animals, ...data.fruits];
+            // Shuffle and pick 6
+            const gameItems = allItems.sort(() => 0.5 - Math.random()).slice(0, 6);
+
+            // Create pairs (Image Card vs Text Card)
+            let cards = [];
+            
+            // Language definitions for random selection
+            const languages = [
+                { code: 'th', class: '', tts: 'th-TH' },
+                { code: 'en', class: '', tts: 'en-US' },
+                { code: 'cn', class: 'font-cn', tts: 'zh-CN' },
+                { code: 'mm', class: 'font-mm', tts: 'my-MM' } // Fallback to 'th-TH' often happens for 'my-MM' in browsers
+            ];
+
+            gameItems.forEach(item => {
+                // Card 1: Image
+                cards.push({ id: item.en, type: 'img', content: item.img, matchId: item.en });
+                
+                // Card 2: Random Language Text
+                const randomLang = languages[Math.floor(Math.random() * languages.length)];
+                let textContent = item[randomLang.code]; // Access item.th, item.en, item.cn, or item.mm
+                
+                cards.push({ 
+                    id: item.en, 
+                    type: 'text', 
+                    content: textContent, 
+                    matchId: item.en,
+                    fontClass: randomLang.class,
+                    ttsLang: randomLang.tts
+                });
+            });
+
+            // Shuffle cards
+            cards.sort(() => 0.5 - Math.random());
+
+            // Render cards
+            cards.forEach(card => {
+                const el = document.createElement('div');
+                el.classList.add('game-card');
+                el.dataset.id = card.matchId;
+                
+                let frontContent = '';
+                if(card.type === 'img') {
+                    frontContent = `<img src="${card.content}" class="w-full h-full object-cover rounded-2xl" style="pointer-events: none;">`;
+                } else {
+                    // Apply specific font class if needed (e.g. for Myanmar/Chinese)
+                    frontContent = `<div class="text-xl font-bold text-center px-2 ${card.fontClass || ''}">${card.content}</div>`;
+                    el.dataset.ttsLang = card.ttsLang; // Store TTS lang for this card
+                    el.dataset.text = card.content; // Store text for TTS
+                }
+
+                el.innerHTML = `
+                    <div class="game-card-inner w-full h-full">
+                        <div class="game-card-front">
+                            <span class="text-4xl">❓</span>
+                        </div>
+                        <div class="game-card-back w-full h-full">
+                            ${frontContent}
+                        </div>
+                    </div>
+                `;
+                
+                el.onclick = () => flipCard(el);
+                grid.appendChild(el);
+            });
+        }
+
+        function flipCard(card) {
+            if (lockBoard) return;
+            if (card === firstCard) return;
+            if (card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+
+            if (!firstCard) {
+                firstCard = card;
+                return;
+            }
+
+            secondCard = card;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            // Keep local references because resetBoard() will clear the global variables
+            const card1 = firstCard;
+            const card2 = secondCard;
+            
+            let isMatch = card1.dataset.id === card2.dataset.id;
+
+            if (isMatch) {
+                disableCards();
+                
+                // Determine which card has the text/tts info to play correct sound
+                let ttsCard = card1.dataset.text ? card1 : card2;
+                
+                if (ttsCard.dataset.text && ttsCard.dataset.ttsLang) {
+                     playSound(ttsCard.dataset.text, ttsCard.dataset.ttsLang, { stopPropagation: ()=>{} });
+                } else {
+                    // Fallback to English if something is missing
+                    playSound(card1.dataset.id, 'en-US', { stopPropagation: ()=>{} });
+                }
+
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            resetBoard();
+            pairsLeft--;
+            document.getElementById('pairs-left').innerText = pairsLeft;
+            
+            if(pairsLeft === 0) {
+                setTimeout(() => {
+                    document.getElementById('win-message').classList.remove('hidden');
+                }, 500);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [firstCard, secondCard, lockBoard] = [null, null, false];
+        }
+    </script>
+</body>
+</html>
